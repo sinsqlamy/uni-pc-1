@@ -1,31 +1,103 @@
 ﻿#include <iostream>
 
-// Упаковка двух чисел в 1 байт
-unsigned char pack_numbers(unsigned int num1, unsigned int num2) {
-    unsigned char packed = (num1 & 0x0F) | ((num2 & 0x0F) << 4);
-    return packed;
-}
+class SmartArray {
+private:
+    int* arr; // указатель на массив
+    int size; // текущий размер массива
+    int capacity; // максимальная емкость массива
 
-// Извлечение двух чисел из 1 байта
-void unpack_numbers(unsigned char packed, unsigned int& num1, unsigned int& num2) {
-    num1 = packed & 0x0F;
-    num2 = (packed >> 4) & 0x0F;
-}
+public:
+    // конструкторы
+    SmartArray() {
+        size = 0;
+        capacity = 4; // начальная емкость массива
+        arr = new int[capacity];
+    }
 
-int main() {
-    unsigned int num1 = 3;
-    unsigned int num2 = 7;
+    SmartArray(int initial_capacity) {
+        size = 0;
+        capacity = initial_capacity;
+        arr = new int[capacity];
+    }
 
-    std::cout << "Original numbers: " << num1 << ", " << num2 << std::endl;
+    // деструктор
+    ~SmartArray() {
+        delete[] arr;
+    }
 
-    // Упаковываем числа
-    unsigned char packed = pack_numbers(num1, num2);
-    std::cout << "Packed number: " << (int)packed << std::endl;
+    // добавление элемента в конец массива
+    void append(int element) {
+        // проверка, достигнут ли максимальный размер массива
+        if (size == capacity) {
+            // увеличение емкости массива вдвое
+            int* new_arr = new int[capacity * 2];
+            for (int i = 0; i < size; i++) {
+                new_arr[i] = arr[i];
+            }
+            delete[] arr;
+            arr = new_arr;
+            capacity *= 2;
+        }
+        arr[size] = element;
+        size++;
+    }
 
-    // Извлекаем числа из упакованного значения
-    unsigned int unpacked_num1, unpacked_num2;
-    unpack_numbers(packed, unpacked_num1, unpacked_num2);
-    std::cout << "Unpacked numbers: " << unpacked_num1 << ", " << unpacked_num2 << std::endl;
+    // получение текущего количества элементов
+    int get_size() {
+        return size;
+    }
 
-    return 0;
-}
+    // получение элемента по индексу
+    int get_element(int index) {
+        if (index < 0 || index >= size) {
+            std::cout << "Error: index out of range" << std::endl;
+            return -1; // возврат ошибки
+        }
+        return arr[index];
+    }
+
+    // изменение элемента по индексу
+    void set_element(int index, int element) {
+        if (index < 0 || index >= size) {
+            std::cout << "Error: index out of range" << std::endl;
+            return;
+        }
+        arr[index] = element;
+    }
+
+    // удаление элемента по индексу
+    void remove(int index) {
+        if (index < 0 || index >= size) {
+            std::cout << "Error: index out of range" << std::endl;
+            return;
+        }
+        for (int i = index; i < size - 1; i++) {
+            arr[i] = arr[i + 1];
+        }
+        size--;
+    }
+
+    // вставка элемента по индексу
+    void insert(int index, int element) {
+        if (index < 0 || index > size) {
+            std::cout << "Error: index out of range" << std::endl;
+            return;
+        }
+        // проверка, достигнут ли максимальный размер массива
+        if (size == capacity) {
+            // увеличение емкости массива вдвое
+            int* new_arr = new int[capacity * 2];
+            for (int i = 0; i < size; i++) {
+                new_arr[i] = arr[i];
+            }
+            delete[] arr;
+            arr = new_arr;
+            capacity *= 2;
+        }
+        for (int i = size - 1; i >= index; i--) {
+            arr[i + 1] = arr[i];
+        }
+        arr[index] = element;
+        size++;
+    }
+};
