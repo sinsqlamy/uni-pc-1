@@ -1,12 +1,33 @@
 ﻿#include <iostream>
-using namespace std;
+#include <cmath>
+
+class Circle {
+private:
+    double radius;
+public:
+    Circle(double r) {
+        setRadius(r);
+    }
+    void setRadius(double r) {
+        if (r < 0) {
+            throw "Radius cannot be negative";
+        }
+        radius = r;
+    }
+    double getRadius() const {
+        return radius;
+    }
+    double getArea() const {
+        return M_PI * radius * radius;
+    }
+};
+
 
 int main() {
-    int x = 123456789; // исходное число
-    char* p = reinterpret_cast<char*>(&x); // приводим указатель на int к указателю на char
-    for (int i = 0; i < sizeof(int); i++) {
-        cout << static_cast<int>(*p) << " "; // выводим значение текущего байта
-        p++; // переходим к следующему байту
-    }
+    double r;
+    std::cout << "Enter the radius of the circle: ";
+    std::cin >> r;
+    Circle circle(r);
+    std::cout << "The area of the circle is " << circle.getArea() << std::endl;
     return 0;
 }
