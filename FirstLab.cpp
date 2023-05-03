@@ -1,12 +1,13 @@
 ﻿#include <iostream>
 #include <vector>
-#include <algorithm>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
-bool is_prime(int n) {
-    if (n < 2) {
+// Функция для проверки, является ли число простым
+bool isPrime(int n) {
+    if (n <= 1) {
         return false;
     }
     for (int i = 2; i <= sqrt(n); i++) {
@@ -17,43 +18,81 @@ bool is_prime(int n) {
     return true;
 }
 
-struct Row {
-    int index;
-    int sum;
-};
-
-bool compare_rows(const Row& r1, const Row& r2) {
-    return r1.sum < r2.sum;
-}
-
 int main() {
     int n;
     cin >> n;
-    vector<vector<int>> matrix(n, vector<int>(n));
+
+    // Чтение матрицы
+    vector<vector<int>> a(n, vector<int>(n));
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            cin >> matrix[i][j];
+            cin >> a[i][j];
         }
     }
-    int col1 = -1, col2 = -1;
-    for (int j1 = 0; j1 < n - 1; j1++) {
-        for (int j2 = j1 + 1; j2 < n; j2++) {
-            bool found_prime = false;
+
+    // Поиск одинаковых столбцов
+    vector<int> col_idx;
+    for (int j = 0; j < n; j++) {
+        for (int k = j + 1; k < n; k++) {
+            bool equal = true;
             for (int i = 0; i < n; i++) {
-                if (abs(matrix[i][j1]) == abs(matrix[i][j2]) && is_prime(abs(matrix[i][j1]))) {
-                    found_prime = true;
+                if (a[i][j] != a[i][k]) {
+                    equal = false;
                     break;
                 }
             }
-            if (found_prime) {
-                col1 = j1;
-                col2 = j2;
+            if (equal) {
+                col_idx.push_back(j);
+                col_idx.push_back(k);
+            }
+        }
+    }
+
+    // Поиск строки, содержащей простое число
+    int row_idx = -1;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (isPrime(abs(a[i][j]))) {
+                row_idx = i;
                 break;
             }
         }
-        if (col1 != -1) {
+        if (row_idx != -1) {
             break;
         }
-
     }
+
+    // Если не нашли ни одного простого числа, то завершаем программу
+    if (row_idx == -1) {
+        return 0;
+    }
+
+    // Упорядочивание строк матрицы по неубыванию суммы модулей элементов
+    vector<pair<int, int>> row_sum(n);
+    for (int i = 0; i < n; i++) {
+        int sum = 0;
+        for (int j = 0; j < n; j++) {
+            sum += abs(a[i][j]);
+        }
+        row_sum[i] = make_pair(sum, i);
+    }
+    sort(row_sum.begin(), row_sum.end());
+
+    // Создание новой матрицы, упорядоченной по строкам
+    vector<vector<int>> new_a(n, vector<int>(n));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            new_a[i][j] = a[row_sum[i].second][j];
+        }
+    }
+
+    // Вывод новой матрицы
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cout << new_a[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    return 0;
 }
