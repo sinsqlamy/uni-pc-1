@@ -1,33 +1,61 @@
 ﻿#include <iostream>
-#include <cmath>
+#include <string>
+#include <vector>
 
-class Circle {
+class Teacher {
 private:
-    double radius;
+    std::string name;
+    std::vector<Student*> students;
+
 public:
-    Circle(double r) {
-        setRadius(r);
+    Teacher(std::string name) : name(name) {}
+
+    void addStudent(Student* student) {
+        students.push_back(student);
+        student->setTeacher(this);
     }
-    void setRadius(double r) {
-        if (r < 0) {
-            throw "Radius cannot be negative";
+
+    void removeStudent(Student* student) {
+        for (int i = 0; i < students.size(); i++) {
+            if (students[i] == student) {
+                students.erase(students.begin() + i);
+                student->removeTeacher();
+                break;
+            }
         }
-        radius = r;
     }
-    double getRadius() const {
-        return radius;
+
+    std::string getName() {
+        return name;
     }
-    double getArea() const {
-        return M_PI * radius * radius;
+
+    std::vector<Student*> getStudents() {
+        return students;
     }
 };
 
+class Student {
+private:
+    std::string name;
+    Teacher* teacher;
 
-int main() {
-    double r;
-    std::cout << "Enter the radius of the circle: ";
-    std::cin >> r;
-    Circle circle(r);
-    std::cout << "The area of the circle is " << circle.getArea() << std::endl;
-    return 0;
-}
+public:
+    Student(std::string name) : name(name), teacher(nullptr) {}
+
+    void setTeacher(Teacher* teacher) {
+        this->teacher = teacher;
+    }
+
+    void removeTeacher() {
+        this->teacher = nullptr;
+    }
+
+    std::string getName() {
+        return name;
+    }
+
+    Teacher* getTeacher() {
+        return teacher;
+    }
+};
+
