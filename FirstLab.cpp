@@ -1,103 +1,100 @@
 ﻿#include <iostream>
-#include <vector>
+#include <fstream>
+#include <string>
+#include <unordered_map>
 #include <algorithm>
+#include <vector>
 
-using namespace std;
+int main() {
+    // 1. Прочитать входной файл и сохранить его содержимое в строку.
+    std::ifstream input_file("input.txt");
+    std::string text;
+    std::getline(input_file, text);
 
-class BigInt {
-public:
-    BigInt() {}
+    // 2. Создать словарь (ассоциативный массив) для хранения количества встречающихся букв в тексте.
+    std::unordered_map<char, int> letter_counts;
 
-    BigInt(const string& s) {
-        for (int i = s.size() - 1; i >= 0; i--) {
-            data.push_back(s[i] - '0');
+    // 3. Пройтись по каждой букве текста и увеличивать соответствующее значение в словаре.
+    for (char c : text) {
+        if (std::isalpha(c)) {
+            letter_counts[std::toupper(c)]++;
         }
-        trim();
     }
 
-    BigInt(int x) {
-        while (x) {
-            data.push_back(x % 10);
-            x /= 10;
-        }
-        trim();
+    // 4. Отсортировать словарь по убыванию значения и выбрать 5 наиболее часто встречающихся букв.
+    std::vector<std::pair<char, int>> sorted_letter_counts(letter_counts.begin(), letter_counts.end());
+    std::sort(sorted_letter_counts.begin(), sorted_letter_counts.end(),
+        [](const auto& a, const auto& b) { return a.second > b.second; });
+    std::string top_five_letters;
+    for (int i = 0; i < std::min(static_cast<int>(sorted_letter_counts.size()), 5); i++) {
+        top_five_letters += sorted_letter_counts[i].first;
     }
 
-    int size() const {
-        return data.size();
-    }
-
-    bool operator<(const BigInt& other) const {
-        if (size() != other.size()) {
-            return size() < other.size();
-        }
-        for (int i = size() - 1; i >= 0; i--) {
-            if (data[i] != other.data[i]) {
-                return data[i] < other.data[i];
+    // 5. Разбить текст на слова, используя пробельные символы в качестве разделителя.
+    std::string word;
+    std::string output_text;
+    bool in_word = false;
+    for (char c : text) {
+        if (std::isalpha(c)) {
+            if (!in_word) {
+                word = "";
+                in_word = true;
             }
+            word += c;
         }
-        return false;
-    }
-
-    bool operator==(const BigInt& other) const {
-        return data == other.data;
-    }
-
-    bool operator!=(const BigInt& other) const {
-        return !(*this == other);
-    }
-
-    BigInt operator+(const BigInt& other) const {
-        BigInt res;
-        int carry = 0;
-        for (int i = 0; i < max(size(), other.size()) || carry; i++) {
-            if (i < size()) {
-                carry += data[i];
-            }
-            if (i < other.size()) {
-                carry += other.data[i];
-            }
-            res.data.push_back(carry % 10);
-            carry /= 10;
-        }
-        res.trim();
-        return res;
-    }
-
-    BigInt operator*(const BigInt& other) const {
-        BigInt res;
-        res.data.resize(size() + other.size());
-        for (int i = 0; i < size(); i++) {
-            int carry = 0;
-            for (int j = 0; j < other.size() || carry; j++) {
-                long long cur = res.data[i + j] + carry;
-                if (j < other.size()) {
-                    cur += 1LL * data[i] * other.data[j];
+        else {
+            if (in_word) {
+                // 6.Для каждого слова проверить, содержит ли оно не менее четырех из пяти наиболее часто встречающихся букв.
+                int count = 0;
+                std::string word_uppercase;
+                for (char letter : word) {
+                    char uppercase_letter = std::toupper(letter);
+                    if (top_five_letters.find(uppercase_letter) != std::string::npos) {
+                        count++;
+                    }
+                    word_uppercase += uppercase_letter;
                 }
-                res.data[i + j] = cur % 10;
-                carry = cur / 10;
+                if (count >= 4) {
+                    // Если слово содержит не менее четырех из пяти наиболее часто встречающихся букв, то
+                    // записать его в верхнем регистре и в скобках указать найденные буквы.
+                    output_text += "(" + top_five_letters + ")";
+                    for (char letter : word_uppercase) {
+                        output_text += std::toupper(letter);
+                    }
+                }
+                else {
+                    // Иначе записать слово без изменений.
+                    output_text += word;
+                }
+                in_word = false;
+            }
+            output_text += c;
+        }
+        if (in_word) {
+            // 6. (Продолжение) Для последнего слова в тексте.
+            int count = 0;
+            std::string word_uppercase;
+            for (char letter : word) {
+                char uppercase_letter = std::toupper(letter);
+                if (top_five_letters.find(uppercase_letter) != std::string::npos) {
+                    count++;
+                }
+                word_uppercase += uppercase_letter;
+            }
+            if (count >= 4) {
+                output_text += "(" + top_five_letters + ")";
+                for (char letter : word_uppercase) {
+                    output_text += std::toupper(letter);
+                }
+            }
+            else {
+                output_text += word;
             }
         }
-        res.trim();
-        return res;
     }
+    // 7. Записать результат в выходной файл.
+    std::ofstream output_file("output.txt");
+    output_file << output_text;
 
-    friend ostream& operator<<(ostream& out, const BigInt& x) {
-        for (int i = x.size() - 1; i >= 0; i--) {
-            out << x.data[i];
-        }
-        return out;
-    }
-
-private:
-    vector<int> data;
-
-    void trim() {
-        while (!data.empty() && data.back() == 0) {
-            data.pop_back();
-        }
-        if (data.empty()) {
-            data.push_back(0);
-        }
-    }
-};
+    return 0;
+}
