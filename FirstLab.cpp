@@ -1,103 +1,140 @@
-﻿#include <iostream>
+﻿Денис ..., [31.05.2023 10:10]
+#include <iostream>
+#include <vector>
+#include <algorithm>
 
-class SmartArray {
-private:
-    int* arr; // указатель на массив
-    int size; // текущий размер массива
-    int capacity; // максимальная емкость массива
+using namespace std;
 
+class BigInt {
 public:
-    // конструкторы
-    SmartArray() {
-        size = 0;
-        capacity = 4; // начальная емкость массива
-        arr = new int[capacity];
+    // Конструктор по умолчанию
+    BigInt() {}
+
+    // Конструктор, принимающий строку в качестве аргумента
+    BigInt(const string& s) {
+        // Проходим по строке в обратном порядке
+        for (int i = s.size() - 1; i >= 0; i--) {
+            // Преобразуем каждую цифру в числовое значение и добавляем в вектор
+            data.push_back(s[i] - '0');
+        }
+        // Удаляем ведущие нули
+        trim();
     }
 
-    SmartArray(int initial_capacity) {
-        size = 0;
-        capacity = initial_capacity;
-        arr = new int[capacity];
+    // Конструктор, принимающий целое число в качестве аргумента
+    BigInt(int x) {
+        // Пока число не равно нулю
+        while (x) {
+            // Получаем остаток от деления на 10 (получаем последнюю цифру числа) и добавляем в вектор
+            data.push_back(x % 10);
+            // Делим число на 10 (удаляем последнюю цифру)
+            x /= 10;
+        }
+        // Удаляем ведущие нули
+        trim();
     }
 
-    // деструктор
-    ~SmartArray() {
-        delete[] arr;
+    // Возвращает количество цифр в числе
+    int size() const {
+        return data.size();
     }
 
-    // добавление элемента в конец массива
-    void append(int element) {
-        // проверка, достигнут ли максимальный размер массива
-        if (size == capacity) {
-            // увеличение емкости массива вдвое
-            int* new_arr = new int[capacity * 2];
-            for (int i = 0; i < size; i++) {
-                new_arr[i] = arr[i];
+    // Перегруженный оператор "<" для сравнения двух объектов BigInt
+    bool operator<(const BigInt& other) const {
+        // Сравниваем размеры чисел
+        if (size() != other.size()) {
+            return size() < other.size();
+        }
+        // Проходим по цифрам чисел, начиная с наиболее значимой
+        for (int i = size() - 1; i >= 0; i--) {
+            // Если находим различие в цифрах, возвращаем результат сравнения
+            if (data[i] != other.data[i]) {
+                return data[i] < other.data[i];
             }
-            delete[] arr;
-            arr = new_arr;
-            capacity *= 2;
         }
-        arr[size] = element;
-        size++;
+        // Если все цифры равны, числа считаются равными, возвращаем false
+        return false;
     }
 
-    // получение текущего количества элементов
-    int get_size() {
-        return size;
+    // Перегруженный оператор "==" для сравнения двух объектов BigInt
+    // Возвращает true, если векторы data обоих объектов равны
+    bool operator==(const BigInt& other) const {
+        return data == other.data;
     }
 
-    // получение элемента по индексу
-    int get_element(int index) {
-        if (index < 0 || index >= size) {
-            std::cout << "Error: index out of range" << std::endl;
-            return -1; // возврат ошибки
-        }
-        return arr[index];
+    // Перегруженный оператор "!=" для сравнения двух объектов BigInt
+    // Возвращает true, если векторы data обоих объектов не равны
+    bool operator!=(const BigInt& other) const {
+        return !(*this == other);
     }
 
-    // изменение элемента по индексу
-    void set_element(int index, int element) {
-        if (index < 0 || index >= size) {
-            std::cout << "Error: index out of range" << std::endl;
-            return;
-        }
-        arr[index] = element;
-    }
-
-    // удаление элемента по индексу
-    void remove(int index) {
-        if (index < 0 || index >= size) {
-            std::cout << "Error: index out of range" << std::endl;
-            return;
-        }
-        for (int i = index; i < size - 1; i++) {
-            arr[i] = arr[i + 1];
-        }
-        size--;
-    }
-
-    // вставка элемента по индексу
-    void insert(int index, int element) {
-        if (index < 0 || index > size) {
-            std::cout << "Error: index out of range" << std::endl;
-            return;
-        }
-        // проверка, достигнут ли максимальный размер массива
-        if (size == capacity) {
-            // увеличение емкости массива вдвое
-            int* new_arr = new int[capacity * 2];
-            for (int i = 0; i < size; i++) {
-                new_arr[i] = arr[i];
+    // Перегруженный оператор "+" для сложения двух объектов BigInt
+    // Создает новый объект BigInt, в котором цифры складываются покомпонентно с учетом переноса
+    BigInt operator+(const BigInt& other) const {
+        BigInt res;
+        int carry = 0;
+        // Проходим по цифрам обоих чисел, складываем их и добавляем в результирующий объект
+        for (int i = 0; i < max(size(), other.size()) carry; i++) {
+            if (i < size()) {
+                carry += data[i];
             }
-            delete[] arr;
-            arr = new_arr;
-            capacity *= 2;
+            if (i < other.size()) {
+                carry += other.data[i];
+            }
+            res.data.push_back(carry % 10);
+            carry /= 10;
         }
-        for (int i = size - 1; i >= index; i--) {
-            arr[i + 1] = arr[i];
+        // Удаляем ведущие нули
+        res.trim();
+        return res;
+    }
+
+    // Перегруженный оператор "*" для умножения двух объектов BigInt
+    // Создает новый объект BigInt, в котором производится умножение цифр с учетом переноса
+    BigInt operator*(const BigInt& other) const {
+        BigInt res;
+        // Выделяем достаточное количество места в векторе для результата
+        res.data.resize(size() + other.size());
+        // Проходим по цифрам обоих чисел и выполняем умножение
+        for (int i = 0; i < size(); i++) {
+            int carry = 0;
+            for (int j = 0; j < other.size() carry; j++) {
+                long long cur = res.data[i + j] + carry;
+                if (j < other.size()) {
+                    cur += 1LL * data[i] * other.data[j];
+                }
+                res.data[i + j] = cur % 10;
+                carry = cur / 10;
+            }
         }
-        arr[index] = element;
-        size++;
+        // Удаляем ведущие нули
+        res.trim();
+        return res;
+    }
+
+    Денис ..., [31.05.2023 10:10]
+        // Перегруженный оператор "<<" для вывода объекта BigInt в поток ostream
+            // Выводит цифры числа в обратном порядке
+        friend ostream& operator<<(ostream& out, const BigInt& x) {
+        for (int i = x.size() - 1; i >= 0; i--) {
+            out << x.data[i];
+        }
+        return out;
+    }
+
+private:
+    // Вектор для хранения цифр числа
+    vector<int> data;
+
+    // Функция для удаления ведущих нулей из числа
+    void trim() {
+        // Пока вектор не пуст и последний элемент равен нулю, удаляем последний элемент
+        while (!data.empty() && data.back() == 0) {
+            data.pop_back();
+        }
+        // Если вектор оказался пустым после удаления нулей, добавляем один элемент со значением нуля
+        if (data.empty()) {
+            data.push_back(0);
+        }
     }
 };
